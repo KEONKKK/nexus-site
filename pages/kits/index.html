@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ערכות לעסקים</title>
+<meta name="description" content="ממלאים חמישה פרטים, ומקבלים ערכה מוכנה להורדה: דף נחיתה, נוסחי הודעה, תמונת כיסוי ודף הנחיה.">
+<!-- 0 תלות חיצונית: בלי CDN, בלי גופן מהרשת, בלי פריימוורק. אייקונים SVG מוטבעים. -->
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+
+<!-- LICENSE-DISCLOSURE
+     No third-party licensed code, fonts, icons or libraries are used on this page, and the
+     same holds for the four kit templates it assembles client-side (landing.html,
+     messages.md, cover.svg, readme.md) - see the zero-external-dependency scan in
+     tests/product-06-kits.mjs and design/STATE-product.md, item 6. All HTML, CSS,
+     JavaScript and SVG here are original work written for this project. wa.me (WhatsApp's
+     own click-to-chat service) is the only external destination ever referenced. This is a
+     factual statement about the code as of this commit, not a legal opinion. -->
+
+<noscript><div class="boot-error" role="alert">
+  <strong>הדף הזה דורש JavaScript פעיל כדי לעבוד.</strong>
+  בלי JavaScript הטופס לא יפעל ולא יהיה אפשר לבנות את קובץ הערכה. הפעילו JavaScript
+  בהגדרות הדפדפן ורעננו את הדף.
+</div></noscript>
+
+<header class="top">
+  <h1>ערכות לעסקים</h1>
+  <p class="sub">ממלאים את הפרטים, ומקבלים קובץ ZIP עם ארבעה קבצים מוכנים. נבנה בדפדפן שלכם, בלי חשבון ובלי תשלום.</p>
+</header>
+
+<div id="boot-error" class="boot-error" role="alert" hidden>
+  <strong>הדף לא נטען במלואו.</strong>
+  הטופס לא יפעל כך. אם פתחתם את הקובץ ישירות מהדיסק, נסו דפדפן אחר, או פתחו את הדף דרך
+  כתובת מקומית. אין צורך לנסות לשלוח — שום דבר לא יישמר.
+</div>
+
+<main>
+  <ul class="kit-list">
+    <li><b>דף נחיתה</b> עמוד אחד בעברית, עם כפתור וואטסאפ של העסק שלכם.</li>
+    <li><b>5 נוסחי הודעה</b> מענה ראשון, מעקב, מתעניין שלא סגר, אישור תור, ואחרי העבודה.</li>
+    <li><b>תמונת כיסוי</b> עם שם העסק והתחום.</li>
+    <li><b>דף הנחיה</b> מה לשנות, ובמה לא לגעת.</li>
+  </ul>
+
+  <form id="form-kits" novalidate>
+
+    <div class="field">
+      <label for="f-name">שם העסק <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-name" name="name" type="text" required autocomplete="organization"
+             inputmode="text" placeholder="השם שהלקוחות מכירים" aria-describedby="e-name">
+      <p class="hint">זה השם שיופיע בדף הנחיתה ובתמונת הכיסוי.</p>
+      <p class="err" id="e-name" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-business-type">סוג העסק <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-business-type" name="business_type" type="text" required
+             inputmode="text" placeholder="לדוגמה: מספרה, אינסטלציה, קונדיטוריה" aria-describedby="e-business-type">
+      <p class="err" id="e-business-type" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-city">עיר <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-city" name="city" type="text" required autocomplete="address-level2"
+             inputmode="text" placeholder="לדוגמה: באר שבע" aria-describedby="e-city">
+      <p class="err" id="e-city" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-size">גודל העסק <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-size" name="business_size" required aria-describedby="e-size">
+        <option value="">בחרו גודל</option>
+      </select>
+      <p class="err" id="e-size" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-pain">מה הכי כואב כרגע? <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-pain" name="pain" required aria-describedby="e-pain">
+        <option value="">בחרו</option>
+      </select>
+      <p class="err" id="e-pain" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-kit">איזו ערכה? <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-kit" name="kit_requested" required aria-describedby="e-kit">
+        <option value="">בחרו ערכה</option>
+      </select>
+      <p class="err" id="e-kit" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-text">משהו שחשוב שנדע <span class="opt">(לא חייב)</span></label>
+      <textarea id="f-text" name="free_text" rows="3" maxlength="200"
+                placeholder="למשל: שעות פתיחה או תחומי התמחות" aria-describedby="e-text"></textarea>
+      <p class="hint">עד 200 תווים. לא נכנס להודעת הוואטסאפ ולא לערכה.</p>
+      <p class="err" id="e-text" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-phone">טלפון <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-phone" name="phone" type="tel" required autocomplete="tel"
+             inputmode="tel" placeholder="050-0000000" aria-describedby="e-phone">
+      <p class="hint">המספר הזה נכנס לכפתור הוואטסאפ של דף הנחיתה שלכם, ולתמונת הכיסוי.</p>
+      <p class="err" id="e-phone" hidden></p>
+    </div>
+
+    <div class="field consent-field">
+      <label class="consent" for="f-consent">
+        <input id="f-consent" name="consent" type="checkbox" required aria-describedby="e-consent">
+        <span id="consent-text"></span>
+      </label>
+      <p class="err" id="e-consent" hidden></p>
+    </div>
+
+    <p class="err summary" id="form-error" role="alert" hidden></p>
+
+    <div class="two-actions">
+      <button id="btn-submit" type="submit" class="go" disabled>
+        <svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4Zm-3 4.3c-.2 0-.5.1-.7.3-.3.3-.7.8-.7 1.7 0 1 .7 2 1.9 3.3 1.3 1.3 2.5 1.9 3.5 2.1.9.2 1.5 0 1.9-.3.4-.3.6-.8.6-1.2 0-.2 0-.3-.2-.4l-1.6-.8c-.2-.1-.3 0-.4.1l-.5.6c-.1.1-.2.2-.4.1-.5-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.5 0-.2 0-.3.1-.4l.5-.5c.1-.2.1-.3 0-.5l-.7-1.5c-.1-.2-.2-.2-.4-.2Z"/>
+        </svg>
+        <span>הורדת הערכה ופתיחת וואטסאפ</span>
+      </button>
+
+      <button id="btn-kit-only" type="button" class="second">
+        <svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4l-4.7-4.7 1.4-1.4L12 13.6V3h0ZM5 19h14v2H5v-2Z"/>
+        </svg>
+        <span>הורדת הערכה בלבד, בלי וואטסאפ</span>
+      </button>
+    </div>
+
+    <p class="note" id="submit-note">
+      הערכה נבנית אצלכם בדפדפן ויורדת כקובץ ZIP. בלחיצה על הכפתור הראשון נפתח גם וואטסאפ עם
+      הודעה מוכנה אלינו — ההודעה לא נשלחת לבד, אתם שולחים אותה.
+    </p>
+
+    <p class="note" id="saved-note" hidden></p>
+  </form>
+
+  <p class="foot">
+    <a href="../find-pro/index.html">מחפשים בעל מקצוע?</a>
+    &nbsp;·&nbsp;
+    <a href="../../index.html">לדף הראשי</a>
+  </p>
+</main>
+
+<!--
+  Classic scripts on purpose, not type="module": ES modules are blocked by CORS on file:// ,
+  and this page must work when it is opened by double-clicking the file, with no server and
+  no build step. Each lib publishes onto globalThis.NEXUS.
+-->
+<script src="../../lib/lead-schema.mjs"></script>
+<script src="../../lib/trades.mjs"></script>
+<script src="../../lib/phone.mjs"></script>
+<script src="../../lib/sha256.mjs"></script>
+<script src="../../lib/score-config.mjs"></script>
+<script src="../../lib/lead-score.mjs"></script>
+<script src="../../lib/consent.mjs"></script>
+<script src="../../lib/wa-link.mjs"></script>
+<script src="../../lib/zip-store.mjs"></script>
+<script src="../../kits/templates/templates-inline.mjs"></script>
+<script src="../../lib/kit-build.mjs"></script>
+<script src="../../assets/app.js"></script>
+<script>
+  (function () {
+    try {
+      window.NEXUS.app.boot("kits");
+    } catch (err) {
+      var box = document.getElementById("boot-error");
+      if (box) box.hidden = false;
+      var btn = document.getElementById("btn-submit");
+      if (btn) btn.disabled = true;
+      var only = document.getElementById("btn-kit-only");
+      if (only) only.disabled = true;
+    }
+  })();
+</script>
+</body>
+</html>

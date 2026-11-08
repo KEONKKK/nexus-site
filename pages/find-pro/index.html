@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מצא בעל מקצוע</title>
+<meta name="description" content="משאירים פרטים, ומקבלים בעל מקצוע שחוזר אליכם בוואטסאפ.">
+<!-- 0 תלות חיצונית: בלי CDN, בלי גופן מהרשת, בלי פריימוורק. אייקונים SVG מוטבעים. -->
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+
+<!-- LICENSE-DISCLOSURE
+     No third-party licensed code, fonts, icons or libraries are used on this page - see
+     the zero-external-dependency scan in tests/product-05-find-pro.mjs (scenario יב) and
+     design/STATE-product.md, item 5. All HTML, CSS and JavaScript on this page are
+     original work written for this project. wa.me (WhatsApp's own click-to-chat service)
+     is the only external destination the page ever navigates the user TO; nothing is
+     loaded FROM it or from any other third party. This is a factual statement about the
+     code as of this commit, not a legal opinion. -->
+
+<noscript><div class="boot-error" role="alert">
+  <strong>הדף הזה דורש JavaScript פעיל כדי לעבוד.</strong>
+  בלי JavaScript רשימת התחומים לא תיטען וכפתור השליחה יישאר מושבת. הפעילו JavaScript
+  בהגדרות הדפדפן ורעננו את הדף.
+</div></noscript>
+
+<header class="top">
+  <h1>מצא בעל מקצוע</h1>
+  <p class="sub">משאירים פרטים, נפתח וואטסאפ עם הפנייה מוכנה, ובעל מקצוע חוזר אליכם.</p>
+</header>
+
+<div id="boot-error" class="boot-error" role="alert" hidden>
+  <strong>הדף לא נטען במלואו.</strong>
+  הטופס לא יפעל כך. אם פתחתם את הקובץ ישירות מהדיסק, נסו דפדפן אחר, או פתחו את הדף דרך
+  כתובת מקומית. אין צורך לנסות לשלוח — הפנייה לא תישמר.
+</div>
+
+<main>
+  <form id="form-find-pro" novalidate>
+
+    <div class="field">
+      <label for="f-trade">מה צריך? <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-trade" name="trade" required aria-describedby="e-trade">
+        <option value="">בחרו תחום</option>
+      </select>
+      <p class="err" id="e-trade" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-city">עיר <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-city" name="city" type="text" required autocomplete="address-level2"
+             inputmode="text" enterkeyhint="next" placeholder="לדוגמה: תל אביב" aria-describedby="e-city">
+      <p class="err" id="e-city" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-urgency">כמה דחוף? <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-urgency" name="urgency" required aria-describedby="e-urgency">
+        <option value="">בחרו דחיפות</option>
+      </select>
+      <p class="err" id="e-urgency" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-budget">תקציב מקסימלי בשקלים <span class="opt">(לא חייב)</span></label>
+      <input id="f-budget" name="budget_max" type="text" inputmode="numeric"
+             autocomplete="off" placeholder="לדוגמה: 1000" aria-describedby="e-budget">
+      <p class="hint">עוזר לבעל המקצוע לדעת אם הוא מתאים. אפשר להשאיר ריק.</p>
+      <p class="err" id="e-budget" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-text">תיאור קצר <span class="opt">(לא חייב)</span></label>
+      <textarea id="f-text" name="free_text" rows="3" maxlength="200"
+                placeholder="מה בדיוק צריך לעשות?" aria-describedby="e-text"></textarea>
+      <p class="hint">עד 200 תווים. התיאור נשמר בפנייה, ולא נכנס להודעת הוואטסאפ כדי לא להאריך אותה.</p>
+      <p class="err" id="e-text" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-name">שם מלא <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-name" name="name" type="text" required autocomplete="name"
+             inputmode="text" placeholder="שם ושם משפחה" aria-describedby="e-name">
+      <p class="err" id="e-name" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-phone">טלפון <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-phone" name="phone" type="tel" required autocomplete="tel"
+             inputmode="tel" placeholder="050-0000000" aria-describedby="e-phone">
+      <p class="err" id="e-phone" hidden></p>
+    </div>
+
+    <div class="field consent-field">
+      <label class="consent" for="f-consent">
+        <input id="f-consent" name="consent" type="checkbox" required aria-describedby="e-consent">
+        <span id="consent-text"></span>
+      </label>
+      <p class="err" id="e-consent" hidden></p>
+    </div>
+
+    <p class="err summary" id="form-error" role="alert" hidden></p>
+
+    <button id="btn-submit" type="submit" class="go" disabled>
+      <svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4Zm-3 4.3c-.2 0-.5.1-.7.3-.3.3-.7.8-.7 1.7 0 1 .7 2 1.9 3.3 1.3 1.3 2.5 1.9 3.5 2.1.9.2 1.5 0 1.9-.3.4-.3.6-.8.6-1.2 0-.2 0-.3-.2-.4l-1.6-.8c-.2-.1-.3 0-.4.1l-.5.6c-.1.1-.2.2-.4.1-.5-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.5 0-.2 0-.3.1-.4l.5-.5c.1-.2.1-.3 0-.5l-.7-1.5c-.1-.2-.2-.2-.4-.2Z"/>
+      </svg>
+      <span>שליחה ופתיחת וואטסאפ</span>
+    </button>
+
+    <p class="note" id="submit-note">
+      בלחיצה נפתח וואטסאפ עם הודעה מוכנה אל מספר השירות. ההודעה לא נשלחת לבד — אתם שולחים אותה.
+    </p>
+
+    <p class="note" id="saved-note" hidden></p>
+  </form>
+
+  <p class="foot">
+    <a href="../kits/index.html">יש לכם עסק? ערכות לעסקים</a>
+    &nbsp;·&nbsp;
+    <a href="../../index.html">לדף הראשי</a>
+  </p>
+</main>
+
+<!--
+  Classic scripts on purpose, not type="module": ES modules are blocked by CORS on file:// ,
+  and this page must work when it is opened by double-clicking the file, with no server and
+  no build step. Each lib publishes onto globalThis.NEXUS. Order matters only in that app.js
+  comes last.
+-->
+<script src="../../lib/lead-schema.mjs"></script>
+<script src="../../lib/trades.mjs"></script>
+<script src="../../lib/phone.mjs"></script>
+<script src="../../lib/sha256.mjs"></script>
+<script src="../../lib/score-config.mjs"></script>
+<script src="../../lib/lead-score.mjs"></script>
+<script src="../../lib/consent.mjs"></script>
+<script src="../../lib/wa-link.mjs"></script>
+<script src="../../assets/app.js"></script>
+<script>
+  // If anything above failed to load, say so loudly instead of leaving a form that
+  // silently does nothing.
+  (function () {
+    try {
+      window.NEXUS.app.boot("find-pro");
+    } catch (err) {
+      var box = document.getElementById("boot-error");
+      if (box) box.hidden = false;
+      var btn = document.getElementById("btn-submit");
+      if (btn) btn.disabled = true;
+    }
+  })();
+</script>
+</body>
+</html>

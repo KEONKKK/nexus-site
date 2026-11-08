@@ -1,0 +1,246 @@
+/* NEXUS - src/assets/app.css - the only stylesheet. Items 5 and 6.
+   0 external dependency: no @import, no web font, no CDN. The font stack is whatever the
+   device already has, which on a phone is the system Hebrew face.
+   Phone first: one column, touch targets at least 44x44 CSS px, no horizontal scroll at
+   320px (recon topic 10 scenarios יג and יד). */
+
+:root {
+  --ink: #15202b;
+  --ink-soft: #4a5a6a;
+  --line: #d4dde6;
+  --bg: #f6f8fa;
+  --card: #ffffff;
+  --go: #1f8a4c;
+  --go-dark: #166b3a;
+  --bad: #b4232a;
+  --focus: #1b64c8;
+  --tap: 44px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+  overflow-x: hidden;           /* a stray wide child must never scroll the page sideways */
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Segoe UI", Arial, "Helvetica Neue", sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+.top, main { max-width: 34rem; margin: 0 auto; padding: 0 14px; }
+
+.top { padding-top: 18px; }
+.top h1 { font-size: 1.55rem; margin: 0 0 6px; line-height: 1.25; }
+.top .sub { margin: 0 0 16px; color: var(--ink-soft); font-size: 0.97rem; }
+
+form {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 0 0 14px;
+}
+
+.field { margin: 0 0 16px; }
+
+label {
+  display: block;
+  font-weight: 600;
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.req { color: var(--bad); }
+.opt { color: var(--ink-soft); font-weight: 400; font-size: 0.88rem; }
+
+input[type="text"],
+input[type="tel"],
+select,
+textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--tap);
+  padding: 11px 12px;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  /* 17px keeps iOS from zooming the page in on focus, which looks like a layout bug */
+  font-size: 17px;
+}
+
+textarea { min-height: 84px; resize: vertical; }
+
+select {
+  /* native arrow, no background image: an SVG data URI here would be one more thing to get
+     wrong in RTL, and the native control is already the right size on a phone */
+  appearance: auto;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--bad);
+  border-width: 2px;
+}
+
+.hint { margin: 6px 0 0; color: var(--ink-soft); font-size: 0.85rem; }
+
+.err {
+  margin: 6px 0 0;
+  color: var(--bad);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.err.summary {
+  background: #fdeaea;
+  border: 1px solid #f0bfc1;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin: 0 0 14px;
+}
+
+.consent-field { margin-top: 20px; }
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: var(--tap);
+  font-weight: 400;
+  font-size: 0.93rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+/* The checkbox itself is the touch target, so it is sized to the full 44px and not just
+   wrapped in something that big. */
+.consent input[type="checkbox"] {
+  width: var(--tap);
+  height: var(--tap);
+  min-width: var(--tap);
+  min-height: var(--tap);
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--go);
+}
+
+.consent span { padding-top: 10px; }
+
+/* the same box for a <button> and for an <a> that acts as one (the gateway page) */
+button.go, a.go {
+  display: flex;
+  text-decoration: none;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 54px;
+  padding: 13px 18px;
+  font: inherit;
+  font-size: 1.07rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--go);
+  border: 1px solid var(--go-dark);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button.go:hover:not(:disabled), a.go:hover { background: var(--go-dark); }
+
+button.go:disabled {
+  background: #9fb3a7;
+  border-color: #8aa294;
+  color: #f2f5f3;
+  cursor: not-allowed;
+}
+
+.ico { flex: 0 0 auto; }
+
+.note { margin: 12px 0 0; color: var(--ink-soft); font-size: 0.85rem; }
+.note.ok { color: var(--go-dark); font-weight: 600; }
+
+.boot-error {
+  max-width: 34rem;
+  margin: 0 auto 14px;
+  padding: 12px 14px;
+  background: #fdeaea;
+  border: 1px solid #f0bfc1;
+  border-radius: 10px;
+  color: var(--bad);
+  font-size: 0.93rem;
+}
+
+.foot {
+  text-align: center;
+  padding: 4px 0 28px;
+  font-size: 0.92rem;
+}
+
+.foot a { color: var(--focus); min-height: var(--tap); display: inline-block; padding: 11px 6px; }
+
+/* ---------- kits page extras ---------- */
+
+.kit-list { margin: 0 0 16px; padding: 0; list-style: none; }
+
+.kit-list li {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 10px;
+  padding: 11px 12px;
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.kit-list b { display: block; margin-bottom: 2px; }
+
+.two-actions { display: flex; flex-direction: column; gap: 10px; }
+
+button.second, a.second {
+  display: flex;
+  text-decoration: none;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 54px;
+  padding: 13px 18px;
+  font: inherit;
+  font-size: 1.03rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button.second:hover:not(:disabled), a.second:hover { background: #eef2f6; }
+
+button.second:disabled { color: #9aa7b3; cursor: not-allowed; }
+
+@media (min-width: 540px) {
+  body { font-size: 17px; }
+  .top h1 { font-size: 1.8rem; }
+}

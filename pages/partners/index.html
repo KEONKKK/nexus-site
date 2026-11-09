@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>בעל מקצוע? קבלו לידים</title>
+<meta name="description" content="נרשמים עם השירותים והאזורים שלכם, ואנחנו מעבירים לכם פניות מתאימות.">
+<!-- 0 תלות חיצונית: בלי CDN, בלי גופן מהרשת, בלי פריימוורק. אייקונים SVG מוטבעים. -->
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+
+<!-- LICENSE-DISCLOSURE
+     No third-party licensed code, fonts, icons or libraries are used on this page. All HTML,
+     CSS and JavaScript here are original work written for this project. wa.me (WhatsApp's own
+     click-to-chat service) is the only external destination this page ever navigates the user
+     TO; nothing is loaded FROM it or from any other third party - and even that destination is
+     never hardcoded here (round 5, 2026-11-09): the number comes from GET /public/config at
+     runtime, with no wa.me link shown at all when none is configured yet. This page also
+     POSTs to /public/partners - confirmed against the real engine/public/public_api.py (round
+     4) - and is linked from the gateway (src/index.html) and listed on dist-allowlist.json, so
+     it does run in production. This is a factual statement about the code as of this commit,
+     not a legal opinion. -->
+
+<noscript><div class="boot-error" role="alert">
+  <strong>הדף הזה דורש JavaScript פעיל כדי לעבוד.</strong>
+  בלי JavaScript הטופס לא יפעל. נסו שוב עם JavaScript פעיל.
+</div></noscript>
+
+<header class="top">
+  <h1>בעל מקצוע? קבלו לידים</h1>
+  <p class="sub">נרשמים עם השירותים והאזורים שלכם, ואנחנו מעבירים לכם פניות מתאימות בוואטסאפ.</p>
+</header>
+
+<div id="boot-error" class="boot-error" role="alert" hidden>
+  <strong>הדף לא נטען במלואו.</strong>
+  הטופס לא יפעל כך. נסו לרענן את הדף.
+</div>
+
+<main>
+  <form id="form-partners" novalidate>
+
+    <fieldset class="field">
+      <legend>מה מתאים לך? <span class="req" aria-hidden="true">*</span></legend>
+      <label class="check-item" for="f-role-buyer">
+        <input id="f-role-buyer" name="role" type="radio" required>
+        <span>אני עסק, ואני רוצה לקבל לידים</span>
+      </label>
+      <label class="check-item" for="f-role-supplier">
+        <input id="f-role-supplier" name="role" type="radio" required>
+        <span>אני בעל/ת מקצוע, ואני מציע/ה שירות</span>
+      </label>
+      <p class="err" id="e-role" hidden></p>
+    </fieldset>
+
+    <div class="field">
+      <label for="f-name">שם <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-name" name="name" type="text" required autocomplete="name"
+             inputmode="text" placeholder="שם ושם משפחה, או שם העסק" aria-describedby="e-name">
+      <p class="err" id="e-name" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="f-phone">טלפון <span class="req" aria-hidden="true">*</span></label>
+      <input id="f-phone" name="phone" type="tel" required autocomplete="tel"
+             inputmode="tel" placeholder="050-0000000" aria-describedby="e-phone">
+      <p class="err" id="e-phone" hidden></p>
+    </div>
+
+    <fieldset class="field">
+      <legend>אילו שירותים? <span class="req" aria-hidden="true">*</span></legend>
+      <p class="hint">אפשר לבחור כמה שרוצים.</p>
+      <div id="services-group" class="check-group"></div>
+      <p class="err" id="e-services" hidden></p>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend>אילו אזורים? <span class="req" aria-hidden="true">*</span></legend>
+      <p class="hint">אפשר לבחור כמה שרוצים.</p>
+      <div id="regions-group" class="check-group"></div>
+      <p class="err" id="e-regions" hidden></p>
+    </fieldset>
+
+    <div class="field">
+      <label for="f-text">משהו שחשוב שנדע <span class="opt">(לא חייב)</span></label>
+      <textarea id="f-text" name="free_text" rows="3" maxlength="200"
+                placeholder="למשל: שעות עבודה, או סוג הלקוחות שמתאים לך" aria-describedby="e-text"></textarea>
+      <p class="hint">עד 200 תווים. לא נכנס להודעת הוואטסאפ.</p>
+      <p class="err" id="e-text" hidden></p>
+    </div>
+
+    <div class="field consent-field">
+      <label class="consent" for="f-consent">
+        <input id="f-consent" name="consent" type="checkbox" required aria-describedby="e-consent">
+        <span id="consent-text"></span>
+      </label>
+      <p class="err" id="e-consent" hidden></p>
+    </div>
+
+    <p class="err summary" id="form-error" role="alert" hidden></p>
+
+    <button id="btn-submit" type="submit" class="go" disabled>
+      <svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4Zm-3 4.3c-.2 0-.5.1-.7.3-.3.3-.7.8-.7 1.7 0 1 .7 2 1.9 3.3 1.3 1.3 2.5 1.9 3.5 2.1.9.2 1.5 0 1.9-.3.4-.3.6-.8.6-1.2 0-.2 0-.3-.2-.4l-1.6-.8c-.2-.1-.3 0-.4.1l-.5.6c-.1.1-.2.2-.4.1-.5-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.5 0-.2 0-.3.1-.4l.5-.5c.1-.2.1-.3 0-.5l-.7-1.5c-.1-.2-.2-.2-.4-.2Z"/>
+      </svg>
+      <span>שליחה ופתיחת וואטסאפ</span>
+    </button>
+
+    <p class="note" id="submit-note">
+      בלחיצה נפתח וואטסאפ עם הודעה מוכנה אלינו. ההודעה לא נשלחת לבד - אתם שולחים אותה.
+    </p>
+
+    <p class="note" id="saved-note" hidden></p>
+  </form>
+
+  <p class="foot">
+    <a href="../../index.html">לדף הראשי</a>
+  </p>
+</main>
+
+<!--
+  Classic scripts on purpose, not type="module": ES modules are blocked by CORS on file:// ,
+  and this page must work when it is opened by double-clicking the file, with no server and
+  no build step. Each lib publishes onto globalThis.NEXUS. lead-schema.mjs is loaded even
+  though this page builds no lead at all: wa-link.mjs's composeFields() calls into it
+  unconditionally for every category, partner included (label lookups for other categories).
+-->
+<script src="../../lib/lead-schema.mjs"></script>
+<script src="../../lib/trades.mjs"></script>
+<script src="../../lib/regions.mjs"></script>
+<script src="../../lib/phone.mjs"></script>
+<script src="../../lib/sha256.mjs"></script>
+<script src="../../lib/consent.mjs"></script>
+<script src="../../lib/wa-link.mjs"></script>
+<script src="../../lib/api-config.mjs"></script>
+<script src="../../lib/api-client.mjs"></script>
+<script src="../../assets/partners-app.js"></script>
+<script>
+  (function () {
+    try {
+      var client = null;
+      try {
+        client = window.NEXUS.apiClient.createApiClient({
+          baseUrl: window.NEXUS.apiConfig.PUBLIC_API_BASE_URL,
+          timeoutMs: 5000
+        });
+      } catch (err) {
+        client = null;
+      }
+      window.NEXUS.partnersApp.boot({ apiClient: client });
+    } catch (err) {
+      var box = document.getElementById("boot-error");
+      if (box) box.hidden = false;
+      var btn = document.getElementById("btn-submit");
+      if (btn) btn.disabled = true;
+    }
+  })();
+</script>
+</body>
+</html>

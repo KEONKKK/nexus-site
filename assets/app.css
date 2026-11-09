@@ -122,7 +122,9 @@ textarea[aria-invalid="true"] {
 
 .consent-field { margin-top: 20px; }
 
-.consent {
+/* .check-item (round 4): the same row shape, reused as-is for every checkbox in a services/
+   regions group and for the role radios on the partners page, instead of a second ruleset. */
+.consent, .check-item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -133,9 +135,11 @@ textarea[aria-invalid="true"] {
   cursor: pointer;
 }
 
-/* The checkbox itself is the touch target, so it is sized to the full 44px and not just
+/* The checkbox/radio itself is the touch target, so it is sized to the full 44px and not just
    wrapped in something that big. */
-.consent input[type="checkbox"] {
+.consent input[type="checkbox"],
+.check-item input[type="checkbox"],
+.check-item input[type="radio"] {
   width: var(--tap);
   height: var(--tap);
   min-width: var(--tap);
@@ -145,7 +149,24 @@ textarea[aria-invalid="true"] {
   accent-color: var(--go);
 }
 
-.consent span { padding-top: 10px; }
+.consent span, .check-item span { padding-top: 10px; }
+
+/* ---------- partners page extras (round 4) ---------- */
+
+.check-group { display: flex; flex-direction: column; gap: 2px; }
+
+fieldset.field {
+  border: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+fieldset.field legend {
+  font-weight: 600;
+  margin: 0 0 6px;
+  font-size: 1rem;
+  padding: 0;
+}
 
 /* the same box for a <button> and for an <a> that acts as one (the gateway page) */
 button.go, a.go {

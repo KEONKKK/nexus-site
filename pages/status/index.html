@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מה קורה עם הפנייה שלי</title>
+<meta name="description" content="בדיקת סטטוס לפנייה שכבר נשלחה, לפי קישור אישי.">
+<!-- 0 תלות חיצונית: בלי CDN, בלי גופן מהרשת, בלי פריימוורק. אייקונים SVG מוטבעים. -->
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+
+<!-- LICENSE-DISCLOSURE
+     No third-party licensed code, fonts, icons or libraries are used on this page. All HTML,
+     CSS and JavaScript here are original work written for this project. wa.me (WhatsApp's own
+     click-to-chat service) is the only external destination this page ever navigates the user
+     TO; nothing is loaded FROM it or from any other third party - and even that destination is
+     never hardcoded here (round 5, 2026-11-09): the number comes from GET /public/config at
+     runtime, with no wa.me link shown at all when none is configured yet. This page is linked
+     from the gateway (src/index.html) and listed on dist-allowlist.json, and its status proxy
+     (GET /public/leads/TOKEN/status) is live, so it does run in production. This is a
+     factual statement about the code as of this commit, not a legal opinion. -->
+
+<noscript><div class="boot-error" role="alert">
+  <strong>הדף הזה דורש JavaScript פעיל כדי לעבוד.</strong>
+  בלי JavaScript אי אפשר לבדוק את הסטטוס בכלל. חזרו אלינו בקרוב, או נסו שוב עם JavaScript פעיל.
+</div></noscript>
+
+<header class="top">
+  <h1>מה קורה עם הפנייה שלי</h1>
+  <p class="sub">בודקים סטטוס לפי הקישור האישי שקיבלתם.</p>
+</header>
+
+<div id="boot-error" class="boot-error" role="alert" hidden>
+  <strong>הדף לא נטען במלואו.</strong>
+  אי אפשר לבדוק את הסטטוס כך. חזרו אלינו בקרוב.
+</div>
+
+<main>
+  <p id="loading" class="note">בודקים את הסטטוס...</p>
+
+  <div id="status-box" hidden>
+    <p class="note ok" id="status-label"></p>
+    <p class="hint">הסטטוס מתעדכן מול המערכת שלנו. אין כאן את פרטי הפנייה עצמה - רק הסטטוס.</p>
+  </div>
+
+  <div id="unknown-status" hidden>
+    <p class="boot-error" role="alert">
+      קיבלנו עבור הפנייה סטטוס שהדף הזה עוד לא יודע להציג (<span id="status-raw"></span>).
+      פנו אלינו בוואטסאפ ונבדוק עבורכם, אם האפשרות הזו מופיעה כאן.
+    </p>
+    <!-- href/visibility set at runtime from GET /public/config (status-view.mjs's
+         applyWaFallback) - never a hardcoded number. Starts hidden: only shown once a real
+         business number is actually known. -->
+    <a id="wa-unknown-status" class="go" hidden>
+      <svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4Zm-3 4.3c-.2 0-.5.1-.7.3-.3.3-.7.8-.7 1.7 0 1 .7 2 1.9 3.3 1.3 1.3 2.5 1.9 3.5 2.1.9.2 1.5 0 1.9-.3.4-.3.6-.8.6-1.2 0-.2 0-.3-.2-.4l-1.6-.8c-.2-.1-.3 0-.4.1l-.5.6c-.1.1-.2.2-.4.1-.5-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.5 0-.2 0-.3.1-.4l.5-.5c.1-.2.1-.3 0-.5l-.7-1.5c-.1-.2-.2-.2-.4-.2Z"/>
+      </svg>
+      <span>פתיחת וואטסאפ</span>
+    </a>
+    <p class="hint" id="wa-unknown-status-fallback">אפשר גם לנסות שוב מאוחר יותר.</p>
+  </div>
+
+  <div id="not-found" hidden>
+    <p class="boot-error" role="alert">
+      לא מצאנו פנייה עם הקישור הזה. ייתכן שהוא הוקלד לא נכון, או שפג תוקפו.
+    </p>
+    <a id="wa-not-found" class="go" hidden>
+      <svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4Zm-3 4.3c-.2 0-.5.1-.7.3-.3.3-.7.8-.7 1.7 0 1 .7 2 1.9 3.3 1.3 1.3 2.5 1.9 3.5 2.1.9.2 1.5 0 1.9-.3.4-.3.6-.8.6-1.2 0-.2 0-.3-.2-.4l-1.6-.8c-.2-.1-.3 0-.4.1l-.5.6c-.1.1-.2.2-.4.1-.5-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.5 0-.2 0-.3.1-.4l.5-.5c.1-.2.1-.3 0-.5l-.7-1.5c-.1-.2-.2-.2-.4-.2Z"/>
+      </svg>
+      <span>פתיחת וואטסאפ</span>
+    </a>
+    <p class="hint" id="wa-not-found-fallback">אפשר גם לנסות שוב מאוחר יותר.</p>
+  </div>
+
+  <div id="fallback" hidden>
+    <p class="note">
+      אי אפשר לבדוק את הסטטוס כרגע. אם האפשרות מופיעה כאן, אפשר לפנות אלינו ישירות בוואטסאפ.
+    </p>
+    <a id="wa-fallback" class="go" hidden>
+      <svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4Zm-3 4.3c-.2 0-.5.1-.7.3-.3.3-.7.8-.7 1.7 0 1 .7 2 1.9 3.3 1.3 1.3 2.5 1.9 3.5 2.1.9.2 1.5 0 1.9-.3.4-.3.6-.8.6-1.2 0-.2 0-.3-.2-.4l-1.6-.8c-.2-.1-.3 0-.4.1l-.5.6c-.1.1-.2.2-.4.1-.5-.2-1.1-.5-1.6-1-.5-.5-.8-1-1-1.5 0-.2 0-.3.1-.4l.5-.5c.1-.2.1-.3 0-.5l-.7-1.5c-.1-.2-.2-.2-.4-.2Z"/>
+      </svg>
+      <span>פתיחת וואטסאפ</span>
+    </a>
+    <p class="hint" id="wa-fallback-fallback">חזרו אלינו בקרוב.</p>
+  </div>
+
+  <p class="foot">
+    <a href="../../index.html">לדף הראשי</a>
+  </p>
+</main>
+
+<!--
+  Classic scripts on purpose, not type="module": ES modules are blocked by CORS on file:// ,
+  and this page must work when it is opened by double-clicking the file, with no server and
+  no build step. Each lib publishes onto globalThis.NEXUS.
+-->
+<script src="../../lib/api-config.mjs"></script>
+<script src="../../lib/api-client.mjs"></script>
+<script src="../../lib/status-view.mjs"></script>
+<script>
+  (function () {
+    // Round 4: the base URL comes from api-config.mjs (NEXUS.apiConfig.PUBLIC_API_BASE_URL)
+    // instead of a constant local to this file, so B only ever has to edit one place for the
+    // whole site. Round 5 (2026-11-09): that value is now the real, live PythonAnywhere host.
+
+    function showBootError() {
+      var box = document.getElementById("boot-error");
+      if (box) box.hidden = false;
+      var loading = document.getElementById("loading");
+      if (loading) loading.hidden = true;
+    }
+
+    try {
+      var client = window.NEXUS.apiClient.createApiClient({
+        baseUrl: window.NEXUS.apiConfig.PUBLIC_API_BASE_URL,
+        timeoutMs: 8000
+      });
+      window.NEXUS.statusView.createStatusView({ doc: document, win: window, client: client }).init().catch(showBootError);
+    } catch (err) {
+      showBootError();
+    }
+  })();
+</script>
+</body>
+</html>

@@ -165,11 +165,24 @@
 <script src="../../lib/zip-store.mjs"></script>
 <script src="../../kits/templates/templates-inline.mjs"></script>
 <script src="../../lib/kit-build.mjs"></script>
+<script src="../../lib/api-config.mjs"></script>
+<script src="../../lib/api-client.mjs"></script>
 <script src="../../assets/app.js"></script>
 <script>
   (function () {
     try {
-      window.NEXUS.app.boot("kits");
+      // Round 4: see the matching comment in pages/find-pro/index.html - a broken proxy
+      // client must never disable the kit/WhatsApp form itself.
+      var client = null;
+      try {
+        client = window.NEXUS.apiClient.createApiClient({
+          baseUrl: window.NEXUS.apiConfig.PUBLIC_API_BASE_URL,
+          timeoutMs: 5000
+        });
+      } catch (err) {
+        client = null;
+      }
+      window.NEXUS.app.boot("kits", { apiClient: client });
     } catch (err) {
       var box = document.getElementById("boot-error");
       if (box) box.hidden = false;

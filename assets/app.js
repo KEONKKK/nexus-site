@@ -57,6 +57,20 @@
     return t === "" ? null : t;
   }
 
+  // The campaign ref from the URL FRAGMENT (#fb_biz, #wa_friends, ...), not the query
+  // string - see design/research/launch-posts-he.md. null for an empty/missing hash, so
+  // callers can do `if (ref) body.source = ref` and leave the server's own default alone
+  // otherwise. Deliberately no client-side validation against a known-campaign list: the
+  // server's attribution.parse_ref already discards anything that does not match its own
+  // pattern, so passing the raw fragment through is simplest and cannot be "more wrong"
+  // than filtering it here too.
+  function refFromHash(win) {
+    var h = (win && win.location && typeof win.location.hash === "string") ? win.location.hash : "";
+    if (h.charAt(0) === "#") h = h.slice(1);
+    h = h.trim();
+    return h === "" ? null : h;
+  }
+
   function defaultRandomBytes(win) {
     return function (n) {
       var out = new Uint8Array(n);
@@ -219,7 +233,24 @@
         };
       },
 
-      okNote: function (wa) {
+      // Round 4: body for POST /public/leads (api-client.mjs's submitLead), per
+      // design/plans/round-3-proxy-spec.md section 1 and design/corpus/proxy-requests.json p-01.
+      // budget_max is NOT sent: the spec's per-category field list for "pro" names only
+      // trade/urgency, not budget_max - see design/STATE-product.md, "בקשות ל-B" (round 4).
+      proxyBody: function (values, lead) {
+        return {
+          category: "pro",
+          text: lead.free_text || ("מחפש/ת " + lead.trade + " ב" + lead.city + "."),
+          name: lead.name,
+          phone: lead.phone_e164,
+          city: lead.city,
+          trade: lead.trade,
+          urgency: lead.urgency,
+          consent: values.consent === true
+        };
+      },
+
+      okNote: function () {
         return "נפתח וואטסאפ עם ההודעה. אם לא נפתח - בדקו חוסם חלונות קופצים ולחצו שוב.";
       }
     },
@@ -327,6 +358,28 @@
         };
       },
 
+      // Round 4: body for POST /public/leads with category "kit" - matches
+      // design/corpus/proxy-requests.json p-03 exactly. Deliberate choice, not /public/kits:
+      // the spec marks /public/kits's own shape (kind/business/industry) as an open question
+      // ("לא שלי להכריע") and p-03's own note says a kit_requested LEAD is a different, already-
+      // specified thing from a /public/kits registration - see design/STATE-product.md,
+      // "בקשות ל-B" (round 4) for this call. The ZIP itself stays 100% client-side, 0 network,
+      // exactly as before - this only reports the lead, same as find-pro does.
+      proxyBody: function (values, lead) {
+        return {
+          category: "kit",
+          text: lead.free_text || ("עסק מסוג " + lead.business_type + ". " + lead.pain + "."),
+          name: lead.name,
+          phone: lead.phone_e164,
+          city: lead.city,
+          business_type: lead.business_type,
+          pain: lead.pain,
+          business_size: lead.business_size,
+          kit_requested: lead.kit_requested,
+          consent: values.consent === true
+        };
+      },
+
       // The kit itself. Built from the lead, so the ZIP and the lead can never disagree.
       kitValues: function (lead) {
         return {
@@ -338,8 +391,10 @@
         };
       },
 
-      okNote: function (wa) {
-        return "הערכה ירדה כקובץ ZIP, ונפתח וואטסאפ עם ההודעה. אם ההורדה לא התחילה - בדקו את תיקיית ההורדות.";
+      // notePrefix() in onSubmit already prepends "הערכה ירדה כקובץ ZIP. " to every outcome for
+      // this page, so this covers only the WhatsApp half.
+      okNote: function () {
+        return "נפתח וואטסאפ עם ההודעה. אם ההורדה לא התחילה - בדקו את תיקיית ההורדות.";
       }
     }
   };
@@ -605,29 +660,154 @@
       var saved = trySave(lead);
       var kit = spec.kitValues ? tryBuildKit(lead) : null;
 
-      var wa = NEXUS.waLink.buildWaLink(spec.waForm(values, lead));
-      if (!wa.ok) {
-        logError("wa.link.too_long", new Error(wa.reason));
-        return { ok: false, errors: [{ field: "wa", message: wa.reason }], opened: 0, reason: "wa_link", lead: lead, saved: saved, kit: kit };
+      // Round 5 (2026-11-09, urgent): opening WhatsApp can no longer be decided synchronously
+      // AT ALL - see wa-link.mjs's header. There is no hardcoded business number any more (the
+      // one that used to live here was a fabricated demo number that shipped to the live site;
+      // guardian.py now refuses to ever send to it), so whether a wa.me link can even be built
+      // depends on an async GET /public/config, same as whether a tracking_token exists depends
+      // on the async POST itself. A blank tab is still reserved SYNCHRONOUSLY, inside the click
+      // handler - popup blockers only allow window.open() during the original user gesture - but
+      // now it is just as likely to be closed again, unused, as it is to be redirected: which of
+      // the three outcomes below happens is never known until the network answers.
+      var handle = openFn("", "_blank", "noopener");
+      var opened = 1;
+
+      var hasClient = !!deps.apiClient && typeof spec.proxyBody === "function";
+      var leadPromise;
+      var configPromise;
+      if (hasClient) {
+        var body = spec.proxyBody(values, lead);
+        // design/research/launch-posts-he.md: the launch posts' links carry a campaign ref
+        // in the URL FRAGMENT (#fb_biz, #wa_friends, ...), one of attribution.KNOWN_CAMPAIGNS
+        // server-side. Only set when present - an empty/missing hash leaves body.source
+        // unset, so the proxy's own default (f"public:{category}") still applies exactly as
+        // before this existed.
+        var ref = refFromHash(win);
+        if (ref) body.source = ref;
+        leadPromise = safeCall(function () { return deps.apiClient.submitLead(body); });
+        configPromise = safeCall(function () { return deps.apiClient.getConfig(); });
+      } else {
+        // No client at all (library failed to load/construct) is now exactly the same case as
+        // "the proxy did not answer": no fabricated fallback number exists to open wa.me with
+        // either way, so both promises resolve to the same shape finish() already knows how to
+        // read, instead of this branch duplicating finish()'s own logic a second time.
+        leadPromise = Promise.resolve({ ok: false, error: "no_client" });
+        configPromise = Promise.resolve({ ok: true, business_whatsapp: null });
       }
 
-      var opened = 0;
-      var handle = openFn(wa.url, "_blank", "noopener");
-      opened = 1;
-
-      var note = el("saved-note");
-      if (note) {
-        note.textContent = spec.okNote(wa);
-        note.hidden = false;
-        if (note.classList && note.classList.add) note.classList.add("ok");
+      function notePrefix() {
+        return spec.kitValues ? "הערכה ירדה כקובץ ZIP. " : "";
       }
+
+      // No token (opted-out replies and the no-client/no-proxy path never have one): just the
+      // bare receipt, with nothing to follow up on - there is no status page link without a
+      // token to put in it.
+      function receivedNote(token) {
+        if (!token) return "קיבלנו את הפנייה.";
+        return "קיבלנו, מספר פנייה: " + token + ". אפשר לעקוב בדף הסטטוס: " + NEXUS.waLink.statusLinkFor(token);
+      }
+
+      function finish(leadResult, configResult) {
+        var token = (leadResult && leadResult.ok && leadResult.tracking_token) ? leadResult.tracking_token : null;
+        var waNumber = (configResult && configResult.business_whatsapp) ? configResult.business_whatsapp : null;
+
+        if (!leadResult || !leadResult.ok) {
+          if (hasClient) logError("lead.proxy.unavailable", new Error((leadResult && leadResult.error) || "unknown"));
+          closeHandle(handle);
+          showNote(notePrefix() + "חזרו אלינו בקרוב.");
+          return { outcome: "no_api", final_url: null, final_text: null, tracking_token: null, proxy: leadResult };
+        }
+
+        if (waNumber) {
+          var withToken = spec.waForm(values, lead);
+          if (token) withToken.tracking_token = token;
+          var wa = NEXUS.waLink.buildWaLink(withToken, waNumber);
+          if (wa.ok) {
+            navigateHandle(handle, wa.url);
+            showNote(notePrefix() + spec.okNote());
+            return { outcome: "wa_opened", final_url: wa.url, final_text: wa.text, tracking_token: token, proxy: leadResult };
+          }
+          // Astronomically rare for a realistic form (see product-04's "אבסורד" scenario) -
+          // falls through to the same "received" outcome below rather than show a broken link.
+          logError("wa.link.too_long", new Error(wa.reason));
+        }
+
+        closeHandle(handle);
+        showNote(notePrefix() + receivedNote(token));
+        return { outcome: "received", final_url: null, final_text: null, tracking_token: token, proxy: leadResult };
+      }
+
+      var pending = Promise.all([leadPromise, configPromise]).then(
+        function (results) { return finish(results[0], results[1]); },
+        function (err) {
+          // Both api-client.mjs methods' own contract is "always resolves, never rejects" -
+          // this branch is belt-and-suspenders, matching the same "never let a secondary system
+          // block the visitor" rule the storage/kit-build failures above already follow.
+          logError("lead.proxy.threw", err);
+          closeHandle(handle);
+          showNote(notePrefix() + "חזרו אלינו בקרוב.");
+          return { outcome: "no_api", final_url: null, final_text: null, tracking_token: null, proxy: null };
+        }
+      );
 
       var form = el(spec.formId);
       if (form && typeof form.reset === "function") {
         // keep the typed values: people often want to send a second, similar enquiry
       }
 
-      return { ok: true, lead: lead, saved: saved, kit: kit, url: wa.url, text: wa.text, opened: opened, handle: handle, errors: [] };
+      return { ok: true, lead: lead, saved: saved, kit: kit, opened: opened, handle: handle, pending: pending, errors: [] };
+    }
+
+    // Writes the one user-facing outcome message. Plain textContent, not innerHTML with a
+    // real <a>: the status-page link inside receivedNote() above is plain visible/copyable
+    // text for the same reason the WhatsApp message itself never gets a clickable link either -
+    // simplicity over polish for an urgent fix, see design/STATE-product.md.
+    function showNote(message) {
+      var note = el("saved-note");
+      if (note) {
+        note.textContent = message;
+        note.hidden = false;
+        if (note.classList && note.classList.add) note.classList.add("ok");
+      }
+    }
+
+    // Closes a reserved-but-unused blank tab. Never throws: a handle can be null (open() was
+    // blocked even for the blank reservation), and in a real browser a window opened by script
+    // can always be close()d by that same script - but this stays defensive exactly like
+    // navigateHandle below, for the same cross-origin/already-closed edge cases.
+    function closeHandle(handle) {
+      if (!handle) return;
+      try {
+        if (typeof handle.close === "function") handle.close();
+      } catch (err) {
+        logError("wa.close.failed", err);
+      }
+    }
+
+    // Navigates an already-open tab/window handle to its real destination. Never throws: a
+    // handle can be null (open() was blocked even for the blank reservation) or, in a real
+    // browser, cross-origin enough that some property access on it throws - either way this
+    // must not stop the caller.
+    function navigateHandle(handle, url) {
+      if (!handle) return;
+      try {
+        handle.location = url;
+      } catch (err) {
+        logError("wa.redirect.failed", err);
+      }
+    }
+
+    // Self-caught while writing tests/product-12-partners.mjs, and ported back here (see
+    // design/STATE-product.md): a deps.apiClient that throws SYNCHRONOUSLY, rather than
+    // returning a rejected promise, would otherwise crash onSubmit before WhatsApp ever opens.
+    // fn() runs inside the try, so a synchronous throw is caught the same way the existing
+    // .then(..., onRejected) branch already handles an async rejection.
+    function safeCall(fn) {
+      try {
+        return Promise.resolve(fn());
+      } catch (err) {
+        return Promise.reject(err);
+      }
     }
 
     function init() {
@@ -678,8 +858,19 @@
     };
   }
 
-  function boot(pageName) {
-    var app = createApp({ doc: root.document, win: root, page: pageName });
+  // Round 4: `extra` lets a page's own inline setup <script> inject deps.apiClient (built there,
+  // from NEXUS.apiConfig + NEXUS.apiClient, so this file stays free of any network setup) without
+  // boot()'s own signature growing a parameter per future dep. A plain for-in loop, not
+  // Object.assign, to match this file's existing ES5-leaning style (no arrow functions, no
+  // other ES2015+ syntax anywhere else here).
+  function boot(pageName, extra) {
+    var deps = { doc: root.document, win: root, page: pageName };
+    if (extra) {
+      for (var k in extra) {
+        if (Object.prototype.hasOwnProperty.call(extra, k)) deps[k] = extra[k];
+      }
+    }
+    var app = createApp(deps);
     app.init();
     NEXUS.appInstance = app;
     return app;

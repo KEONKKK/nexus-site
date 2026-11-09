@@ -137,13 +137,28 @@
 <script src="../../lib/lead-score.mjs"></script>
 <script src="../../lib/consent.mjs"></script>
 <script src="../../lib/wa-link.mjs"></script>
+<script src="../../lib/api-config.mjs"></script>
+<script src="../../lib/api-client.mjs"></script>
 <script src="../../assets/app.js"></script>
 <script>
   // If anything above failed to load, say so loudly instead of leaving a form that
   // silently does nothing.
   (function () {
     try {
-      window.NEXUS.app.boot("find-pro");
+      // Round 4: building the proxy client is its OWN try/catch, separate from the one below.
+      // A missing/broken api-config.mjs or api-client.mjs must never trip the "core libs
+      // missing" error path that disables the submit button - it only means no tracking_token
+      // and no proxy report, exactly like the proxy being unreachable at request time.
+      var client = null;
+      try {
+        client = window.NEXUS.apiClient.createApiClient({
+          baseUrl: window.NEXUS.apiConfig.PUBLIC_API_BASE_URL,
+          timeoutMs: 5000
+        });
+      } catch (err) {
+        client = null;
+      }
+      window.NEXUS.app.boot("find-pro", { apiClient: client });
     } catch (err) {
       var box = document.getElementById("boot-error");
       if (box) box.hidden = false;
